@@ -24,7 +24,7 @@ class User extends Base {
     return {
       REDIS_KEYS: {
         user: userId => { // This is a HASH. Users with their data that have been cached.
-          if (!userId) throw new TypeError(`User ID must be provided`)
+          if (!userId) throw new TypeError('User ID must be provided')
           return `drss_user_${userId}`
         }
       },
@@ -35,7 +35,9 @@ class User extends Base {
         this.utils.JSON_KEYS.forEach(key => {
           // MUST be a flat structure
           if (key === 'displayAvatarURL') {
-            toStore[key] = user[key]() || ''
+            toStore[key] = user[key]({
+              format: 'png'
+            }) || ''
           } else {
             toStore[key] = user[key] || ''
           }
@@ -45,12 +47,16 @@ class User extends Base {
       update: async (redisClient, oldUser, newUser) => {
         if (!(oldUser instanceof Discord.User) || !(newUser instanceof Discord.User)) throw new TypeError('User is not instance of Discord.User')
         const exists = await promisify(redisClient.exists).bind(redisClient)(this.utils.REDIS_KEYS.user(newUser.id))
-        if (!exists) return exports.guilds.recognize(newUser)
+        if (!exists) return User.utils.recognize(redisClient, newUser)
         const toStore = {}
         this.utils.JSON_KEYS.forEach(key => {
           if (key === 'displayAvatarURL') {
-            const oldAvatar = oldUser[key]()
-            const newAvatar = newUser[key]()
+            const oldAvatar = oldUser[key]({
+              format: 'png'
+            })
+            const newAvatar = newUser[key]({
+              format: 'png'
+            })
             if (oldAvatar !== newAvatar) {
               toStore[key] = newAvatar
             }

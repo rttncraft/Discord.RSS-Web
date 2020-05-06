@@ -3,29 +3,13 @@ const express = require('express')
 const session = require('express-session')
 const compression = require('compression')
 const RedisStore = require('connect-redis')(session)
-const discordAPIConstants = require('./constants/discordAPI.js')
 const routes = require('./routes/index.js')
 const requestIp = require('request-ip')
-const configService = require('./services/config.js')
 const createLogger = require('./util/logger/create.js')
-const log = createLogger('W')
 const app = express()
 
-module.exports = async (redisClient, config) => {
-  const feedConfig = await configService.getFeedConfig()
-  if (feedConfig === null) {
-    throw new Error('The bot must be started at least once to initialize data before the web interface.')
-  }
-
-  const credentials = {
-    client: {
-      id: config.bot.clientID,
-      secret: config.bot.clientSecret
-    },
-    auth: discordAPIConstants.auth
-  }
-  const oauth2 = require('simple-oauth2').create(credentials)
-
+module.exports = (redisClient, config) => {
+  const log = createLogger('W')
   if (config.http.trustProxy) {
     app.enable('trust proxy')
   }
@@ -82,7 +66,6 @@ module.exports = async (redisClient, config) => {
   }
 
   // Application-specific variables
-  app.set('oauth2', oauth2)
   app.set('config', config)
   app.set('redisClient', redisClient)
 

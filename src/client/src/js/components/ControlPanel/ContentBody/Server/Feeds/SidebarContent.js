@@ -15,6 +15,7 @@ import moment from 'moment-timezone'
 import { Scrollbars } from 'react-custom-scrollbars'
 import feedSelectors from 'js/selectors/feeds'
 import { setActiveFeed, fetchDeleteFeed, fetchEditFeed } from 'js/actions/feeds'
+import { fetchGuildFeedSchedule } from 'js/actions/schedules'
 
 const EditField = styled.div`
   margin-top: 1em;
@@ -65,6 +66,7 @@ function SideBar (props) {
   const { selectedFeed, channelDropdownOptions } = props
   const selectedFailRecord = selectedFeed ? failRecords.find(r => r.url === selectedFeed.url) : null
   const hasFailed = !selectedFailRecord ? false : !!selectedFailRecord.alerted
+  const refreshRate = selectedFeed && schedules[selectedFeed._id] ? schedules[selectedFeed._id].refreshRateMinutes : null
 
   useEffect(() => {
     setInputChannel('')
@@ -74,8 +76,6 @@ function SideBar (props) {
   if (!activeGuild || !selectedFeed) {
     return <div />
   }
-
-  const refreshRate = schedules[selectedFeed._id] ? schedules[selectedFeed._id].refreshRateMinutes : null
 
   let differentFromDefault = false
   if (selectedFeed) {
